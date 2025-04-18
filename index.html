@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Power Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-center">Solar Power Calculator</h1>
+        <div id="appliance-form" class="mb-6">
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <input type="text" id="appliance-name" placeholder="Appliance Name" class="border p-2 rounded">
+                <input type="number" id="wattage" placeholder="Wattage (W)" class="border p-2 rounded">
+                <input type="number" id="hours" placeholder="Hours/Day" class="border p-2 rounded">
+            </div>
+            <button onclick="addAppliance()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add
+                Appliance</button>
+        </div>
+        <div id="appliance-list" class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Added Appliances</h2>
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border p-2">Appliance</th>
+                        <th class="border p-2">Wattage (W)</th>
+                        <th class="border p-2">Hours/Day</th>
+                        <th class="border p-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="appliance-table"></tbody>
+            </table>
+        </div>
+        <div class="mb-6">
+            <label class="block mb-2">Average Daily Solar Hours (e.g., 5 for sunny areas):</label>
+            <input type="number" id="solar-hours" value="5" class="border p-2 rounded w-full" min="1" max="12">
+        </div>
+        <button onclick="calculateSolar()"
+            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">Calculate Solar Needs</button>
+        <div id="results" class="mt-6 hidden">
+            <h2 class="text-lg font-semibold mb-2">Results</h2>
+            <p id="total-consumption" class="mb-2"></p>
+            <p id="system-size" class="mb-2"></p>
+            <p id="panels-needed" class="mb-2"></p>
+        </div>
+    </div>
+
+    <script>
+        let appliances = [];
+
+        function addAppliance() {
+            const name = document.getElementById('appliance-name').value.trim();
+            const wattage = parseFloat(document.getElementById('wattage').value);
+            const hours = parseFloat(document.getElementById('hours').value);
+
+            if (name && wattage > 0 && hours >= 0) {
+                appliances.push({ name, wattage, hours });
+                updateApplianceTable();
+                clearInputs();
+            } else {
+                alert('Please enter valid appliance details.');
+            }
+        }
+
+        function updateApplianceTable() {
+            const tableBody = document.getElementById('appliance-table');
+            tableBody.innerHTML = '';
+            appliances.forEach((appliance, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border p-2">${appliance.name}</td>
+                    <td class="border p-2">${appliance.wattage}</td>
+                    <td class="border p-2">${appliance.hours}</td>
+                    <td class="border p-2">
+                        <button onclick="removeAppliance(${index})" class="text-red-500 hover:text-red-700">Remove</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function removeAppliance(index) {
+            appliances.splice(index, 1);
+            updateApplianceTable();
+        }
+
+        function clearInputs() {
+            document.getElementById('appliance-name').value = '';
+            document.getElementById('wattage').value = '';
+            document.getElementById('hours').value = '';
+        }
+
+        function calculateSolar() {
+            if (appliances.length === 0) {
+                alert('Please add at least one appliance.');
+                return;
+            }
+
+            const solarHours = parseFloat(document.getElementById('solar-hours').value);
+            if (solarHours <= 0 || isNaN(solarHours)) {
+                alert('Please enter valid solar hours.');
+                return;
+            }
+
+            // Calculate total daily consumption in kWh
+            const totalConsumption = appliances.reduce((sum, appliance) => {
+                return sum + (appliance.wattage * appliance.hours / 1000);
+            }, 0);
+
+            // Assume 400W panels and 80% system efficiency
+            const panelWattage = 400;
+            const systemEfficiency = 0.8;
+            const systemSize = totalConsumption / (solarHours * systemEfficiency); // in kW
+            const panelsNeeded = Math.ceil(systemSize * 1000 / panelWattage);
+
+            // Display results
+            const resultsDiv = document.getElementById('results');
+            document.getElementById('total-consumption').textContent =
+                `Total Daily Consumption: ${totalConsumption.toFixed(2)} kWh`;
+            document.getElementById('system-size').textContent =
+                `Required Solar System Size: ${systemSize.toFixed(2)} kW`;
+            document.getElementById('panels-needed').textContent =
+                `Estimated Number of 400W Panels: ${panelsNeeded}`;
+            resultsDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+
+</html>
