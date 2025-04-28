@@ -10,121 +10,110 @@
 
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
-        <h1 class="text-2xl font-bold mb-6 text-center">Solar Power Calculator</h1>
-        <div id="appliance-form" class="mb-6">
-            <div class="grid grid-cols-3 gap-4 mb-4">
-                <input type="text" id="appliance-name" placeholder="Appliance Name" class="border p-2 rounded">
-                <input type="number" id="wattage" placeholder="Wattage (W)" class="border p-2 rounded">
-                <input type="number" id="hours" placeholder="Hours/Day" class="border p-2 rounded">
+        <div class="max-w-2xl mx-auto p-6 bg-white rounded-2xl shadow-lg space-y-6">
+            <h2 class="text-3xl font-bold text-center text-yellow-500">Solar Calculator</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                    <select id="state"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        <option value="">Select State</option>
+                        <option value="high">High Solar Radiation (e.g., Rajasthan)</option>
+                        <option value="medium">Medium Solar Radiation (e.g., Maharashtra)</option>
+                        <option value="low">Low Solar Radiation (e.g., North East)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="tariff" class="block text-sm font-medium text-gray-700 mb-1">Tariff Type *</label>
+                    <select id="tariff"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        <option value="">Select Tariff Type</option>
+                        <option value="residential">Residential (₹8/unit)</option>
+                        <option value="commercial">Commercial (₹10/unit)</option>
+                        <option value="industrial">Industrial (₹6/unit)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="monthlyUnits" class="block text-sm font-medium text-gray-700 mb-1">Average Monthly Unit
+                        Consumption (kWh) *</label>
+                    <input type="number" id="monthlyUnits" placeholder="e.g. 1000"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" />
+                </div>
+
+                <div>
+                    <label for="connectedLoad" class="block text-sm font-medium text-gray-700 mb-1">Connected Load (kW)
+                        (optional)</label>
+                    <input type="number" id="connectedLoad" placeholder="e.g. 5"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" />
+                </div>
+
+                <div class="text-center">
+                    <button onclick="calculateAdvancedSolar()"
+                        class="px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition duration-300">
+                        Calculate
+                    </button>
+                </div>
             </div>
-            <button onclick="addAppliance()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add
-                Appliance</button>
-        </div>
-        <div id="appliance-list" class="mb-6">
-            <h2 class="text-lg font-semibold mb-2">Added Appliances</h2>
-            <table class="w-full border-collapse">
-                <thead>
-                    <tr class="bg-gray-200">
-                        <th class="border p-2">Appliance</th>
-                        <th class="border p-2">Wattage (W)</th>
-                        <th class="border p-2">Hours/Day</th>
-                        <th class="border p-2">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="appliance-table"></tbody>
-            </table>
-        </div>
-        <div class="mb-6">
-            <label class="block mb-2">Average Daily Solar Hours (e.g., 5 for sunny areas):</label>
-            <input type="number" id="solar-hours" value="5" class="border p-2 rounded w-full" min="1" max="12">
-        </div>
-        <button onclick="calculateSolar()"
-            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full">Calculate Solar Needs</button>
-        <div id="results" class="mt-6 hidden">
-            <h2 class="text-lg font-semibold mb-2">Results</h2>
-            <p id="total-consumption" class="mb-2"></p>
-            <p id="system-size" class="mb-2"></p>
-            <p id="panels-needed" class="mb-2"></p>
+
+            <div id="result" style="display:none;"
+                class="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2 mt-6">
+                <p><strong>Approximate System Size:</strong> <span id="systemSize"
+                        class="text-green-800 font-semibold"></span> kW</p>
+                <p><strong>Approximate Rooftop Area Required:</strong> <span id="areaRequired"
+                        class="text-green-800 font-semibold"></span> sqft</p>
+                <p><strong>Approximate System Cost:</strong> ₹<span id="systemCost"
+                        class="text-green-800 font-semibold"></span></p>
+                <p><strong>Approximate Annual Savings:</strong> ₹<span id="annualSavings"
+                        class="text-green-800 font-semibold"></span></p>
+            </div>
         </div>
     </div>
 
     <script>
-        let appliances = [];
+        function calculateAdvancedSolar() {
+            const state = document.getElementById('state').value;
+            const tariff = document.getElementById('tariff').value;
+            const monthlyUnits = parseFloat(document.getElementById('monthlyUnits').value);
+            const connectedLoad = parseFloat(document.getElementById('connectedLoad').value);
 
-        function addAppliance() {
-            const name = document.getElementById('appliance-name').value.trim();
-            const wattage = parseFloat(document.getElementById('wattage').value);
-            const hours = parseFloat(document.getElementById('hours').value);
-
-            if (name && wattage > 0 && hours >= 0) {
-                appliances.push({ name, wattage, hours });
-                updateApplianceTable();
-                clearInputs();
-            } else {
-                alert('Please enter valid appliance details.');
-            }
-        }
-
-        function updateApplianceTable() {
-            const tableBody = document.getElementById('appliance-table');
-            tableBody.innerHTML = '';
-            appliances.forEach((appliance, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="border p-2">${appliance.name}</td>
-                    <td class="border p-2">${appliance.wattage}</td>
-                    <td class="border p-2">${appliance.hours}</td>
-                    <td class="border p-2">
-                        <button onclick="removeAppliance(${index})" class="text-red-500 hover:text-red-700">Remove</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function removeAppliance(index) {
-            appliances.splice(index, 1);
-            updateApplianceTable();
-        }
-
-        function clearInputs() {
-            document.getElementById('appliance-name').value = '';
-            document.getElementById('wattage').value = '';
-            document.getElementById('hours').value = '';
-        }
-
-        function calculateSolar() {
-            if (appliances.length === 0) {
-                alert('Please add at least one appliance.');
+            if (!state || !tariff || isNaN(monthlyUnits) || monthlyUnits <= 0) {
+                alert("Please fill all required fields correctly.");
                 return;
             }
 
-            const solarHours = parseFloat(document.getElementById('solar-hours').value);
-            if (solarHours <= 0 || isNaN(solarHours)) {
-                alert('Please enter valid solar hours.');
-                return;
+            // Tariff per unit
+            let costPerUnit;
+            switch (tariff) {
+                case "residential": costPerUnit = 8; break;
+                case "commercial": costPerUnit = 10; break;
+                case "industrial": costPerUnit = 6; break;
             }
 
-            // Calculate total daily consumption in kWh
-            const totalConsumption = appliances.reduce((sum, appliance) => {
-                return sum + (appliance.wattage * appliance.hours / 1000);
-            }, 0);
+            // Solar generation factor based on state
+            let generationFactor;
+            switch (state) {
+                case "high": generationFactor = 1700; break; // Units per kW/year
+                case "medium": generationFactor = 1500; break;
+                case "low": generationFactor = 1300; break;
+            }
 
-            // Assume 400W panels and 80% system efficiency
-            const panelWattage = 400;
-            const systemEfficiency = 0.8;
-            const systemSize = totalConsumption / (solarHours * systemEfficiency); // in kW
-            const panelsNeeded = Math.ceil(systemSize * 1000 / panelWattage);
+            const annualUnits = monthlyUnits * 12;
+            const systemSize = (annualUnits / generationFactor).toFixed(2); // in kW
+            const areaRequired = Math.ceil(systemSize * 90); // sqft
 
-            // Display results
-            const resultsDiv = document.getElementById('results');
-            document.getElementById('total-consumption').textContent =
-                `Total Daily Consumption: ${totalConsumption.toFixed(2)} kWh`;
-            document.getElementById('system-size').textContent =
-                `Required Solar System Size: ${systemSize.toFixed(2)} kW`;
-            document.getElementById('panels-needed').textContent =
-                `Estimated Number of 400W Panels: ${panelsNeeded}`;
-            resultsDiv.classList.remove('hidden');
+            const costPerKW = 50000; // ₹ per kW
+            const systemCost = Math.round(systemSize * costPerKW);
+
+            const annualSavings = Math.round(annualUnits * costPerUnit);
+
+            document.getElementById('systemSize').innerText = systemSize;
+            document.getElementById('areaRequired').innerText = areaRequired;
+            document.getElementById('systemCost').innerText = systemCost;
+            document.getElementById('annualSavings').innerText = annualSavings;
+
+            document.getElementById('result').style.display = 'block';
         }
     </script>
 </body>
